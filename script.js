@@ -15,8 +15,8 @@ const pairingsResult = document.getElementById('pairingsResult');
 const linksList = document.getElementById('linksList');
 
 // Charger les données sauvegardées au démarrage
-window.addEventListener('DOMContentLoaded', () => {
-    loadConfig();
+window.addEventListener('DOMContentLoaded', async () => {
+    await loadConfig();  // Attendre que la config soit chargée
     loadData();
     updateParticipantsList();
     checkGenerateButton();
@@ -33,10 +33,12 @@ async function loadConfig() {
         if (response.ok) {
             const config = await response.json();
             publicUrl = config.publicUrl;
+            console.log('📍 URL publique configurée:', publicUrl);
         }
     } catch (error) {
         console.error('Erreur chargement config:', error);
         publicUrl = window.location.origin;
+        console.log('📍 URL publique par défaut:', publicUrl);
     }
 }
 
