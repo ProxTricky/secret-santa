@@ -25,7 +25,8 @@ app.use(session({
     cookie: { 
         secure: false, // Mettre à true si HTTPS
         httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24 heures
+        maxAge: 24 * 60 * 60 * 1000, // 24 heures
+        sameSite: 'lax'
     }
 }));
 
@@ -58,9 +59,11 @@ async function writeData(data) {
 
 // Middleware d'authentification
 function requireAuth(req, res, next) {
+    console.log('🔐 Vérification auth - Session:', req.session);
     if (req.session.authenticated) {
         next();
     } else {
+        console.log('❌ Non authentifié');
         res.status(401).json({ error: 'Non authentifié' });
     }
 }
@@ -69,10 +72,14 @@ function requireAuth(req, res, next) {
 app.post('/api/auth/login', (req, res) => {
     const { username, password } = req.body;
     
+    console.log('🔑 Tentative de connexion:', username);
+    
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
         req.session.authenticated = true;
+        console.log('✅ Connexion réussie, session:', req.session.id);
         res.json({ success: true });
     } else {
+        console.log('❌ Identifiants incorrects');
         res.status(401).json({ error: 'Identifiants incorrects' });
     }
 });
