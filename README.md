@@ -1,8 +1,10 @@
-# 🎅 Secret Santa - Site Web
+# 🎅 Secret Santa - Application Web
 
-Un site web moderne et élégant pour organiser votre Secret Santa en français !
+Une application web moderne et élégante pour organiser vos tirages au sort de Secret Santa, entièrement en français !
 
-**Créé par Gurvan Pincepoche** 🎄
+## 🎯 À propos
+
+Cette application permet de gérer facilement des événements Secret Santa avec une interface d'administration complète et des liens personnalisés pour chaque participant. Déployable sur n'importe quel serveur avec Docker.
 
 ## ✨ Fonctionnalités
 
@@ -11,14 +13,15 @@ Un site web moderne et élégant pour organiser votre Secret Santa en français 
 - **Identifiants configurables** : Définis via variables d'environnement
 - **Session persistante** : Reste connecté pendant la session
 
-### Interface d'Administration
+### 🎁 Interface d'Administration
 - **Création d'événement** : Définissez le nom, la date, l'heure, le lieu et le budget
 - **Gestion des participants** : Ajoutez et supprimez facilement des participants
-- **Tirage au sort automatique** : Génération aléatoire des attributions (personne ne se tire elle-même)
+- **Tirage au sort amélioré** : Algorithme aléatoire évitant les chaînes simples (1→2→3→1)
+- **Historique des tirages** : Créez plusieurs tirages et naviguez dans l'historique
 - **Génération de liens personnalisés** : Chaque participant reçoit un lien unique
 - **Copie facile** : Bouton pour copier rapidement les liens
 
-### Page Participant
+### 📱 Page Participant
 - **Informations de l'événement** : Date, heure, lieu, budget
 - **Révélation du cadeau** : Bouton pour découvrir à qui offrir un cadeau
 - **Animation festive** : Confettis et animations lors de la révélation
@@ -29,92 +32,75 @@ Un site web moderne et élégant pour organiser votre Secret Santa en français 
 - **Stockage serveur** : Fichier JSON persistant dans un volume Docker
 - **Pas de perte de données** : Les données survivent aux redémarrages
 
-## 🚀 Déploiement sur Proxmox
+## 🚀 Déploiement avec Docker
 
 ### Prérequis
 
-- Serveur Proxmox avec Docker installé
-- Nginx comme reverse proxy
-- Nom de domaine `santa.proxtricky.fr` pointant vers votre serveur
-- Certificat SSL (Let's Encrypt recommandé)
+- Serveur avec Docker et Docker Compose installés
+- (Optionnel) Reverse proxy (Nginx, Traefik, Caddy) pour HTTPS
+- (Optionnel) Nom de domaine pointant vers votre serveur
 
 ### Installation Rapide
 
-1. **Cloner le projet sur votre serveur Proxmox**
+1. **Cloner le projet**
    ```bash
-   cd /opt
-   git clone <votre-repo> secret-santa
+   git clone https://github.com/votre-username/secret-santa.git
    cd secret-santa
    ```
 
-2. **Configurer les identifiants**
+2. **Configurer les variables d'environnement**
    ```bash
    cp .env.example .env
    nano .env
    ```
    
    Modifiez les valeurs :
-   ```bash
+   ```env
+   # Identifiants administrateur
    ADMIN_USERNAME=votre_nom_utilisateur
    ADMIN_PASSWORD=VotreMotDePasseSuperSecure123!
+   
+   # Secret pour les sessions (générez une chaîne aléatoire)
    SESSION_SECRET=une-chaine-aleatoire-tres-longue-et-securisee
+   
+   # URL publique de votre application (pour la génération des liens)
+   PUBLIC_URL=http://votre-domaine.com
+   # ou simplement: PUBLIC_URL=http://192.168.1.100:3000
    ```
 
-3. **Déployer l'application**
+3. **Démarrer l'application**
    ```bash
-   chmod +x deploy.sh
-   ./deploy.sh
-   ```
-
-4. **Configurer Nginx Reverse Proxy**
-   ```bash
-   sudo cp nginx-reverse-proxy.conf /etc/nginx/sites-available/santa.proxtricky.fr
-   sudo ln -s /etc/nginx/sites-available/santa.proxtricky.fr /etc/nginx/sites-enabled/
+   docker compose up -d
    ```
    
-   Éditez le fichier si nécessaire :
-   ```bash
-   sudo nano /etc/nginx/sites-available/santa.proxtricky.fr
-   ```
+   L'application sera accessible sur `http://localhost:3000`
 
-5. **Obtenir un certificat SSL avec Certbot**
-   ```bash
-   sudo certbot --nginx -d santa.proxtricky.fr
-   ```
+### 🌐 Configuration avec Reverse Proxy (Optionnel)
 
-6. **Redémarrer Nginx**
-   ```bash
-   sudo nginx -t
-   sudo systemctl reload nginx
-   ```
-
-### 🌐 Accès
-
-- **Administration** : https://santa.proxtricky.fr
-- **Connexion avec les identifiants** définis dans `.env`
+Un fichier exemple `nginx-reverse-proxy.conf` est fourni pour configurer Nginx comme reverse proxy avec HTTPS.
 
 ## 🛠️ Gestion
 
 ### Voir les logs
 ```bash
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ### Arrêter l'application
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ### Redémarrer l'application
 ```bash
-docker-compose restart
+docker compose restart
 ```
 
 ### Mettre à jour
 ```bash
 git pull
-docker-compose build
-docker-compose up -d
+docker compose build --no-cache
+docker compose up -d
 ```
 
 ### Sauvegarder les données
@@ -126,15 +112,15 @@ docker cp secret-santa:/data/secret-santa.json ./backup-$(date +%Y%m%d).json
 ### Restaurer les données
 ```bash
 docker cp ./backup-YYYYMMDD.json secret-santa:/data/secret-santa.json
-docker-compose restart
+docker compose restart
 ```
 
 ## 📋 Architecture
 
 ```
 ┌─────────────────────────────────────┐
-│   Nginx Reverse Proxy (Proxmox)    │
-│   santa.proxtricky.fr               │
+│   Reverse Proxy (Optionnel)        │
+│   votre-domaine.com                 │
 │   SSL/HTTPS                         │
 └──────────────┬──────────────────────┘
                │
@@ -161,6 +147,7 @@ docker-compose restart
 | `ADMIN_USERNAME` | Nom d'utilisateur admin | `admin` |
 | `ADMIN_PASSWORD` | Mot de passe admin | `SecretSanta2024!` |
 | `SESSION_SECRET` | Secret pour les sessions | (à changer) |
+| `PUBLIC_URL` | URL publique de l'application | `http://localhost:3000` |
 | `PORT` | Port de l'application | `3000` |
 | `DATA_FILE` | Chemin du fichier de données | `/data/secret-santa.json` |
 
@@ -171,7 +158,7 @@ docker-compose restart
 - **Animations** : Transitions fluides, effets de survol, confettis
 - **Responsive** : S'adapte automatiquement à tous les écrans
 
-## � Structure du Projet
+## 📁 Structure du Projet
 
 ```
 secret-santa/
@@ -180,15 +167,14 @@ secret-santa/
 ├── Dockerfile                   # Image Docker
 ├── docker-compose.yml           # Configuration Docker Compose
 ├── .env.example                 # Template variables d'environnement
-├── nginx-reverse-proxy.conf     # Config Nginx pour Proxmox
-├── deploy.sh / deploy.bat       # Scripts de déploiement
-├── index.html                   # Interface admin
+├── nginx-reverse-proxy.conf     # Config Nginx exemple
+├── admin.html                   # Interface admin
 ├── login.html                   # Page de connexion
 ├── participant.html             # Page participant
 ├── styles.css                   # Styles CSS
 ├── script.js                    # Logique admin
 ├── participant.js               # Logique participant
-└── README.md                    # Cette documentation
+└── README.md                    # Documentation
 ```
 
 ## 🔒 Sécurité
@@ -202,13 +188,28 @@ secret-santa/
 
 ## 🎁 Utilisation
 
-1. **Connectez-vous** à https://santa.proxtricky.fr
-2. **Remplissez** les informations de l'événement
-3. **Ajoutez** tous les participants (minimum 3)
-4. **Générez** le tirage au sort
-5. **Copiez** les liens et envoyez-les à chaque participant
-6. Les participants **cliquent** sur leur lien pour voir leur attribution
+1. **Connectez-vous** à l'interface admin (http://localhost:3000 ou votre domaine)
+2. **Entrez vos identifiants** configurés dans le fichier `.env`
+3. **Remplissez** les informations de l'événement (nom, date, lieu, budget)
+4. **Ajoutez** tous les participants (minimum 3 personnes)
+5. **Générez** le tirage au sort avec l'algorithme aléatoire
+6. **Copiez** les liens personnalisés et envoyez-les aux participants
+7. Les participants **ouvrent** leur lien unique pour découvrir leur attribution
+
+## � Fonctionnalités Avancées
+
+- **Nouveau tirage** : Créez plusieurs tirages pour le même événement
+- **Historique** : Consultez et restaurez les tirages précédents
+- **Algorithme intelligent** : Évite les suites simples (1→2→3→1) pour plus d'aléatoire
+
+## 🤝 Contribution
+
+Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
+
+## 📄 Licence
+
+MIT License - Libre d'utilisation et de modification
 
 ## 🎄 Joyeuses fêtes !
 
-Créé avec ❤️ par **Gurvan Pincepoche**
+Profitez de vos échanges de cadeaux ! 🎁
