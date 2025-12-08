@@ -20,9 +20,9 @@ yarn-error.log*
 # Environment
 .env
 
-# Data
+# Data (mais pas package.json)
 data/
-*.json
+/secret-santa.json
 
 # IDE
 .vscode/
