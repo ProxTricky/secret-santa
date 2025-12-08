@@ -3,6 +3,7 @@ let participants = [];
 let eventData = null;
 let pairings = [];
 let publicUrl = '';
+let drawHistory = []; // Historique des tirages
 
 // Éléments du DOM
 const participantNameInput = document.getElementById('participantName');
@@ -195,6 +196,19 @@ generatePairingsBtn.addEventListener('click', () => {
         return;
     }
     
+    // Sauvegarder l'ancien tirage dans l'historique si il existe
+    if (pairings.length > 0 && eventData) {
+        const confirmed = confirm('Un tirage existe déjà. Voulez-vous créer un nouveau tirage ? L\'ancien sera conservé dans l\'historique.');
+        if (!confirmed) return;
+        
+        drawHistory.push({
+            date: new Date().toISOString(),
+            eventData: { ...eventData },
+            pairings: [...pairings],
+            participants: [...participants]
+        });
+    }
+    
     // Récupérer les données de l'événement
     eventData = {
         name: document.getElementById('eventName').value.trim(),
@@ -213,35 +227,55 @@ generatePairingsBtn.addEventListener('click', () => {
     
     // Afficher les résultats
     displayPairings();
+    
+    // Mettre à jour le bouton d'historique
+    updateHistoryButton();
 });
 
-// Algorithme de tirage au sort
+// Algorithme de tirage au sort amélioré (évite les chaînes 1→2→3→1)
 function generateSecretSantaPairings(participants) {
-    const shuffled = [...participants];
     let validPairing = false;
     let attempts = 0;
     let result = [];
     
-    // Essayer jusqu'à obtenir un tirage valide (personne ne se tire elle-même)
+    // Essayer jusqu'à obtenir un tirage valide et vraiment aléatoire
     while (!validPairing && attempts < 1000) {
-        // Mélanger le tableau
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        
-        // Vérifier que personne ne s'est tiré soi-même
+        // Créer une copie des participants pour les receivers
+        const receivers = [...participants];
+        result = [];
         validPairing = true;
-        result = participants.map((giver, index) => {
-            const receiver = shuffled[index];
-            if (giver.id === receiver.id) {
+        
+        // Pour chaque donneur
+        for (let i = 0; i < participants.length; i++) {
+            const giver = participants[i];
+            
+            // Filtrer les receivers possibles (pas soi-même et pas déjà assigné)
+            let availableReceivers = receivers.filter(r => r.id !== giver.id);
+            
+            if (availableReceivers.length === 0) {
                 validPairing = false;
+                break;
             }
-            return {
+            
+            // Choisir un receiver aléatoire parmi les disponibles
+            const randomIndex = Math.floor(Math.random() * availableReceivers.length);
+            const receiver = availableReceivers[randomIndex];
+            
+            // Ajouter le pairing
+            result.push({
                 giver: giver,
                 receiver: receiver
-            };
-        });
+            });
+            
+            // Retirer ce receiver de la liste disponible
+            const receiverIndex = receivers.findIndex(r => r.id === receiver.id);
+            receivers.splice(receiverIndex, 1);
+        }
+        
+        // Vérifier qu'on n'a pas une simple rotation (1→2→3→1)
+        if (validPairing && isSimpleRotation(result)) {
+            validPairing = false;
+        }
         
         attempts++;
     }
@@ -251,7 +285,33 @@ function generateSecretSantaPairings(participants) {
         return [];
     }
     
+    console.log('🎲 Tirage généré après', attempts, 'tentative(s)');
     return result;
+}
+
+// Vérifier si le tirage est une simple rotation (1→2→3→1)
+function isSimpleRotation(pairings) {
+    if (pairings.length <= 3) return false; // Acceptable pour 3 participants
+    
+    // Suivre la chaîne depuis le premier participant
+    let current = pairings[0].giver;
+    let chainLength = 0;
+    const visited = new Set();
+    
+    while (chainLength < pairings.length) {
+        visited.add(current.id);
+        const pairing = pairings.find(p => p.giver.id === current.id);
+        current = pairing.receiver;
+        chainLength++;
+        
+        // Si on revient au début
+        if (current.id === pairings[0].giver.id) {
+            // C'est une rotation simple si tous les participants sont dans une seule chaîne
+            return chainLength === pairings.length;
+        }
+    }
+    
+    return false;
 }
 
 // Afficher les pairings
@@ -277,8 +337,188 @@ function displayPairings() {
         linksList.appendChild(linkItem);
     });
     
+    // Ajouter les boutons d'action
+    const actionsDiv = document.createElement('div');
+    actionsDiv.style.marginTop = '2rem';
+    actionsDiv.style.display = 'flex';
+    actionsDiv.style.gap = '1rem';
+    actionsDiv.style.justifyContent = 'center';
+    actionsDiv.innerHTML = `
+        <button class="btn btn-secondary" onclick="resetCurrentDraw()" style="background: #e74c3c;">
+            🔄 Nouveau tirage
+        </button>
+        <button class="btn btn-secondary" onclick="showHistory()" id="historyBtn" style="background: #3498db;">
+            📜 Historique (${drawHistory.length})
+        </button>
+    `;
+    linksList.appendChild(actionsDiv);
+    
     // Scroll vers les résultats
     pairingsResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Réinitialiser le tirage actuel
+function resetCurrentDraw() {
+    if (!confirm('Voulez-vous vraiment créer un nouveau tirage ? Le tirage actuel sera archivé.')) {
+        return;
+    }
+    
+    // Sauvegarder dans l'historique
+    if (pairings.length > 0 && eventData) {
+        drawHistory.push({
+            date: new Date().toISOString(),
+            eventData: { ...eventData },
+            pairings: [...pairings],
+            participants: [...participants]
+        });
+    }
+    
+    // Réinitialiser
+    pairings = [];
+    pairingsResult.classList.add('hidden');
+    saveData();
+    
+    alert('✅ Prêt pour un nouveau tirage ! Modifiez les informations si nécessaire et cliquez sur "Générer les pairings".');
+}
+
+// Afficher l'historique
+function showHistory() {
+    if (drawHistory.length === 0) {
+        alert('📜 Aucun tirage dans l\'historique.');
+        return;
+    }
+    
+    let html = '<div style="max-height: 60vh; overflow-y: auto;">';
+    html += '<h3 style="margin-top: 0;">📜 Historique des tirages</h3>';
+    
+    drawHistory.forEach((draw, index) => {
+        const date = new Date(draw.date);
+        const dateStr = date.toLocaleDateString('fr-FR', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        html += `
+            <div style="background: #f8f9fa; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; border-left: 4px solid #e74c3c;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <strong>${draw.eventData.name}</strong>
+                    <small style="color: #666;">${dateStr}</small>
+                </div>
+                <div style="font-size: 0.9em; color: #666;">
+                    ${draw.participants.length} participants • Budget: ${draw.eventData.budget}€
+                </div>
+                <div style="margin-top: 0.5rem;">
+                    <button class="btn btn-secondary" onclick="restoreDraw(${index})" style="font-size: 0.9em; padding: 0.4rem 0.8rem;">
+                        ↩️ Restaurer
+                    </button>
+                    <button class="btn btn-secondary" onclick="deleteDraw(${index})" style="font-size: 0.9em; padding: 0.4rem 0.8rem; background: #e74c3c;">
+                        🗑️ Supprimer
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    
+    // Créer une modal personnalisée
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1rem;
+    `;
+    
+    const modalContent = document.createElement('div');
+    modalContent.style.cssText = `
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        max-width: 600px;
+        width: 100%;
+        max-height: 80vh;
+        overflow-y: auto;
+    `;
+    
+    modalContent.innerHTML = html + `
+        <button class="btn" onclick="this.closest('[style*=fixed]').remove()" style="width: 100%; margin-top: 1rem;">
+            Fermer
+        </button>
+    `;
+    
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+    
+    // Fermer en cliquant sur le fond
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
+// Restaurer un tirage de l'historique
+function restoreDraw(index) {
+    if (!confirm('Voulez-vous restaurer ce tirage ? Le tirage actuel sera perdu si non sauvegardé.')) {
+        return;
+    }
+    
+    const draw = drawHistory[index];
+    
+    // Restaurer les données
+    participants = [...draw.participants];
+    eventData = { ...draw.eventData };
+    pairings = [...draw.pairings];
+    
+    // Mettre à jour l'interface
+    document.getElementById('eventName').value = eventData.name || '';
+    document.getElementById('eventDate').value = eventData.date || '';
+    document.getElementById('eventTime').value = eventData.time || '';
+    document.getElementById('eventLocation').value = eventData.location || '';
+    document.getElementById('budget').value = eventData.budget || '';
+    document.getElementById('instructions').value = eventData.instructions || '';
+    
+    updateParticipantsList();
+    displayPairings();
+    saveData();
+    
+    // Fermer la modal
+    document.querySelector('[style*="position: fixed"]').remove();
+    
+    alert('✅ Tirage restauré !');
+}
+
+// Supprimer un tirage de l'historique
+function deleteDraw(index) {
+    if (!confirm('Voulez-vous vraiment supprimer ce tirage de l\'historique ?')) {
+        return;
+    }
+    
+    drawHistory.splice(index, 1);
+    saveData();
+    
+    // Rafraîchir l'affichage de l'historique
+    document.querySelector('[style*="position: fixed"]').remove();
+    showHistory();
+}
+
+// Mettre à jour le bouton d'historique
+function updateHistoryButton() {
+    const historyBtn = document.getElementById('historyBtn');
+    if (historyBtn) {
+        historyBtn.innerHTML = `📜 Historique (${drawHistory.length})`;
+    }
 }
 
 // Créer un lien personnalisé pour un participant
@@ -322,7 +562,8 @@ function saveData() {
     const data = {
         participants: participants,
         eventData: eventData,
-        pairings: pairings
+        pairings: pairings,
+        drawHistory: drawHistory // Sauvegarder l'historique
     };
     
     // Sauvegarder sur le serveur
@@ -347,6 +588,7 @@ async function loadData() {
             participants = data.participants || [];
             eventData = data.eventData || null;
             pairings = data.pairings || [];
+            drawHistory = data.drawHistory || []; // Charger l'historique
             
             // Restaurer les données de l'événement
             if (eventData) {
@@ -362,6 +604,8 @@ async function loadData() {
             if (pairings.length > 0) {
                 displayPairings();
             }
+            
+            console.log('📜 Historique chargé:', drawHistory.length, 'tirage(s)');
         }
     } catch (error) {
         console.error('Erreur chargement:', error);
