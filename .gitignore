@@ -1,0 +1,35 @@
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Certificats SSL
+traefik/acme.json
+
+# Docker
+.dockerignore
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+
+# Data
+data/
+*.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Backups
+*.bak

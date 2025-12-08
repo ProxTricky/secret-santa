@@ -1,0 +1,22 @@
+http:
+  middlewares:
+    https-redirect:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+    default-headers:
+      headers:
+        frameDeny: true
+        browserXssFilter: true
+        contentTypeNosniff: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+
+    security-headers:
+      headers:
+        customFrameOptionsValue: "SAMEORIGIN"
+        customResponseHeaders:
+          X-Robots-Tag: "none,noarchive,nosnippet,notranslate,noimageindex"

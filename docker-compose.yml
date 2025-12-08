@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  secret-santa:
+    build: .
+    container_name: secret-santa
+    restart: unless-stopped
+    ports:
+      - "3000:3000"  # Exposer sur le port 3000
+    volumes:
+      - santa-data:/data  # Volume persistant pour les données
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATA_FILE=/data/secret-santa.json
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-SecretSanta2024!}
+      - SESSION_SECRET=${SESSION_SECRET:-change-me-in-production}
+    networks:
+      - web
+
+networks:
+  web:
+    driver: bridge
+
+volumes:
+  santa-data:
+    driver: local

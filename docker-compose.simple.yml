@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  secret-santa:
+    build: .
+    container_name: secret-santa
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html:ro
+      - ./participant.html:/usr/share/nginx/html/participant.html:ro
+      - ./styles.css:/usr/share/nginx/html/styles.css:ro
+      - ./script.js:/usr/share/nginx/html/script.js:ro
+      - ./participant.js:/usr/share/nginx/html/participant.js:ro

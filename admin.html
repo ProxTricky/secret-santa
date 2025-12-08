@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secret Santa - Administration</title>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        // Rediriger vers login si non authentifié
+        if (sessionStorage.getItem('adminAuthenticated') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    </script>
+</head>
+<body>
+    <div class="snow-container"></div>
+    
+    <div class="container">
+        <header>
+            <h1>🎅 Secret Santa</h1>
+            <p class="subtitle">Organisez votre échange de cadeaux magique !</p>
+            <button id="logoutBtn" class="btn-logout">🚪 Déconnexion</button>
+        </header>
+
+        <div class="admin-panel">
+            <section class="event-section card">
+                <h2>📅 Informations de l'événement</h2>
+                <form id="eventForm">
+                    <div class="form-group">
+                        <label for="eventName">Nom de l'événement</label>
+                        <input type="text" id="eventName" placeholder="Ex: Secret Santa de la famille" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="eventDate">Date de l'événement</label>
+                            <input type="date" id="eventDate" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="eventTime">Heure</label>
+                            <input type="time" id="eventTime" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="eventLocation">Lieu</label>
+                        <input type="text" id="eventLocation" placeholder="Ex: Chez grand-mère" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="budget">Budget (€)</label>
+                        <input type="number" id="budget" min="0" placeholder="Ex: 20" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="instructions">Instructions supplémentaires</label>
+                        <textarea id="instructions" rows="3" placeholder="Ex: Privilégiez les cadeaux faits maison !"></textarea>
+                    </div>
+                </form>
+            </section>
+
+            <section class="participants-section card">
+                <h2>👥 Liste des participants</h2>
+                <div class="add-participant">
+                    <input type="text" id="participantName" placeholder="Nom du participant">
+                    <input type="email" id="participantEmail" placeholder="Email (optionnel)">
+                    <button id="addParticipant" class="btn btn-add">
+                        <span>+ Ajouter</span>
+                    </button>
+                </div>
+                
+                <div id="participantsList" class="participants-list">
+                    <!-- Les participants seront ajoutés ici dynamiquement -->
+                </div>
+                
+                <div class="participant-count">
+                    <span id="participantCount">0 participant</span>
+                </div>
+            </section>
+
+            <section class="actions-section">
+                <button id="generatePairings" class="btn btn-primary" disabled>
+                    ✨ Générer le tirage au sort
+                </button>
+                
+                <div id="pairingsResult" class="pairings-result hidden">
+                    <h3>🎁 Tirage effectué avec succès !</h3>
+                    <p>Les liens personnalisés ont été générés pour chaque participant.</p>
+                    <div id="linksList" class="links-list">
+                        <!-- Les liens seront générés ici -->
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer class="app-footer">
+            <p>Créé par <strong>Gurvan Pincepoche</strong> 🎄</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
