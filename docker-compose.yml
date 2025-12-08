@@ -11,27 +11,16 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - DATA_FILE=/data/secret-santa.json
-      - PUBLIC_URL=${PUBLIC_URL:-https://santa.proxtricky.fr}
+      - PUBLIC_URL=${PUBLIC_URL:-http://santa.proxtricky.fr}
       - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-SecretSanta2024!}
       - SESSION_SECRET=${SESSION_SECRET:-change-me-in-production}
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.santa.rule=Host(`santa.proxtricky.fr`)"
-      - "traefik.http.routers.santa.entrypoints=websecure"
-      - "traefik.http.routers.santa.tls.certresolver=letsencrypt"
-      - "traefik.http.services.santa.loadbalancer.server.port=3000"
-      # Redirection HTTP vers HTTPS
-      - "traefik.http.routers.santa-http.rule=Host(`santa.proxtricky.fr`)"
-      - "traefik.http.routers.santa-http.entrypoints=web"
-      - "traefik.http.routers.santa-http.middlewares=https-redirect"
-      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
     networks:
       - web
 
 networks:
   web:
-    external: true
+    driver: bridge
 
 volumes:
   santa-data:
