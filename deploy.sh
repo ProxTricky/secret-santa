@@ -15,15 +15,15 @@ fi
 
 # Build de l'image
 echo "🔨 Build de l'image Docker..."
-docker-compose build
+docker compose build
 
 # Arrêter les anciens conteneurs
 echo "🛑 Arrêt des anciens conteneurs..."
-docker-compose down
+docker compose down
 
 # Démarrer les services
 echo "🚀 Démarrage des services..."
-docker-compose up -d
+docker compose up -d
 
 # Afficher les logs
 echo ""
