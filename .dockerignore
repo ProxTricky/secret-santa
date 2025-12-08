@@ -1,0 +1,35 @@
+# Documentation
+*.md
+
+# Git
+.git
+.gitignore
+
+# Node
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Environment
+.env
+
+# Docker
+docker-compose*.yml
+
+# Scripts
+deploy.sh
+deploy.bat
+dev.sh
+dev.bat
+test.sh
+test.bat
+
+# Nginx config standalone (non utilisé)
+nginx.conf
+nginx-reverse-proxy.conf
+
+# Traefik (non utilisé)
+traefik/
+
+# Data
+data/
