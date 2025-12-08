@@ -8,6 +8,7 @@ const session = require('express-session');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = process.env.DATA_FILE || '/data/secret-santa.json';
+const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
 
 // Identifiants admin (à définir via variables d'environnement)
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
@@ -104,6 +105,11 @@ app.post('/api/data', requireAuth, async (req, res) => {
         console.error('Erreur écriture données:', error);
         res.status(500).json({ error: 'Erreur serveur' });
     }
+});
+
+// Route pour obtenir l'URL publique
+app.get('/api/config', (req, res) => {
+    res.json({ publicUrl: PUBLIC_URL });
 });
 
 // Route publique pour les participants (lecture seule)

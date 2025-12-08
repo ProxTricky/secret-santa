@@ -2,6 +2,7 @@
 let participants = [];
 let eventData = null;
 let pairings = [];
+let publicUrl = '';
 
 // Éléments du DOM
 const participantNameInput = document.getElementById('participantName');
@@ -15,6 +16,7 @@ const linksList = document.getElementById('linksList');
 
 // Charger les données sauvegardées au démarrage
 window.addEventListener('DOMContentLoaded', () => {
+    loadConfig();
     loadData();
     updateParticipantsList();
     checkGenerateButton();
@@ -23,6 +25,20 @@ window.addEventListener('DOMContentLoaded', () => {
     // Bouton de déconnexion
     document.getElementById('logoutBtn').addEventListener('click', logout);
 });
+
+// Charger la configuration (URL publique)
+async function loadConfig() {
+    try {
+        const response = await fetch('/api/config');
+        if (response.ok) {
+            const config = await response.json();
+            publicUrl = config.publicUrl;
+        }
+    } catch (error) {
+        console.error('Erreur chargement config:', error);
+        publicUrl = window.location.origin;
+    }
+}
 
 // Fonction de déconnexion
 async function logout() {
@@ -265,7 +281,8 @@ function displayPairings() {
 
 // Créer un lien personnalisé pour un participant
 function createParticipantLink(participantId) {
-    const baseUrl = window.location.href.replace('index.html', '').replace(/\/$/, '');
+    // Utiliser l'URL publique configurée ou window.location.origin en fallback
+    const baseUrl = publicUrl || window.location.origin;
     return `${baseUrl}/participant.html?id=${participantId}`;
 }
 
