@@ -283,9 +283,17 @@ function displayPairings() {
 
 // Créer un lien personnalisé pour un participant
 function createParticipantLink(participantId) {
-    // Utiliser l'URL publique configurée ou window.location.origin en fallback
-    const baseUrl = publicUrl || window.location.origin;
-    return `${baseUrl}/participant.html?id=${participantId}`;
+    // Utiliser l'URL publique configurée, sinon construire depuis origin
+    let baseUrl = publicUrl;
+    
+    if (!baseUrl) {
+        // Fallback: utiliser window.location.origin (sans le path)
+        baseUrl = window.location.origin;
+    }
+    
+    const link = `${baseUrl}/participant.html?id=${participantId}`;
+    console.log('🔗 Lien généré:', link);
+    return link;
 }
 
 // Copier un lien
