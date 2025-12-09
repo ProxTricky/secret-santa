@@ -18,12 +18,16 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'SecretSanta2024!';
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('public'));
+
+// Trust proxy pour fonctionner derrière un reverse proxy (Nginx Proxy Manager)
+app.set('trust proxy', 1);
+
 app.use(session({
     secret: process.env.SESSION_SECRET || 'secret-santa-session-key-change-me',
     resave: false,
     saveUninitialized: false,
     cookie: { 
-        secure: false, // Mettre à true si HTTPS
+        secure: 'auto', // Auto-détecte HTTP/HTTPS
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000, // 24 heures
         sameSite: 'lax'
