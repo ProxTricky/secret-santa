@@ -27,11 +27,12 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: { 
-        secure: 'auto', // Auto-détecte HTTP/HTTPS
+        secure: process.env.NODE_ENV === 'production' ? false : false, // Géré par le reverse proxy
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000, // 24 heures
         sameSite: 'lax'
-    }
+    },
+    proxy: true // Important pour les reverse proxy
 }));
 
 // Fonction pour lire les données
